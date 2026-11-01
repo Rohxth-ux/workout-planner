@@ -4,10 +4,13 @@ import { AuthContext } from "../authContext";
 
 const API = "http://localhost:2000/api";
 
-const Section = ({ title, type, onAuthError }) => {
+const isToday = (d) => new Date(d).toDateString() === new Date().toDateString();
+
+const Section = ({ title, type, onAuthError, withCalories }) => {
   const [items, setItems] = useState([]);
   const [name, setName] = useState("");
   const [time, setTime] = useState("");
+  const [calories, setCalories] = useState("");
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
 
@@ -34,6 +37,7 @@ const Section = ({ title, type, onAuthError }) => {
   const reset = () => {
     setName("");
     setTime("");
+    setCalories("");
     setEditId(null);
   };
 
@@ -41,6 +45,7 @@ const Section = ({ title, type, onAuthError }) => {
     e.preventDefault();
     setError("");
     const body = { name, time: time === "" ? undefined : Number(time) };
+    if (withCalories) body.calories = calories === "" ? 0 : Number(calories);
     try {
       if (editId) {
         await axios.put(`${API}/${type}/${editId}`, body);
@@ -58,6 +63,7 @@ const Section = ({ title, type, onAuthError }) => {
     setEditId(item._id);
     setName(item.name);
     setTime(item.time ?? "");
+    setCalories(item.calories ?? "");
     setError("");
   };
 
@@ -71,9 +77,16 @@ const Section = ({ title, type, onAuthError }) => {
     }
   };
 
+  const totalToday = items
+    .filter((i) => isToday(i.createdAt))
+    .reduce((sum, i) => sum + (i.calories || 0), 0);
+
   return (
     <div className="section">
       <h3>{title}</h3>
+      {withCalories && (
+        <p style={{ fontWeight: "bold" }}>Today's calories: {totalToday} kcal</p>
+      )}
       <form onSubmit={submit}>
         <input
           placeholder="Name"
@@ -86,6 +99,14 @@ const Section = ({ title, type, onAuthError }) => {
           value={time}
           onChange={(e) => setTime(e.target.value)}
         />
+        {withCalories && (
+          <input
+            type="number"
+            placeholder="Calories"
+            value={calories}
+            onChange={(e) => setCalories(e.target.value)}
+          />
+        )}
         <button>{editId ? "Update" : "Add"}</button>
         {editId && (
           <button type="button" onClick={reset}>
@@ -99,6 +120,7 @@ const Section = ({ title, type, onAuthError }) => {
           <li key={i._id}>
             <span>
               {i.name} {i.time ? `(${i.time} min)` : ""}
+              {withCalories && i.calories ? ` - ${i.calories} kcal` : ""}
             </span>
             <span>
               <button onClick={() => startEdit(i)}>Edit</button>{" "}
@@ -129,7 +151,7 @@ const Home = () => {
           Hi {user.username} <button onClick={doLogout}>Logout</button>
         </div>
       </div>
-      <Section title="Meals" type="meals" onAuthError={doLogout} />
+      <Section title="Meals" type="meals" onAuthError={doLogout} withCalories />
       <Section title="Routines" type="routines" onAuthError={doLogout} />
     </div>
   );
