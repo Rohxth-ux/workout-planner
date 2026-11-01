@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Bmi from "./pages/Bmi";
+import Dashboard from "./pages/Dashboard";
 import "./style.css";
 
 axios.defaults.withCredentials = true;
@@ -16,6 +17,7 @@ const Layout = ({ children }) => (
       <NavLink to="/" end>
         Home
       </NavLink>
+      <NavLink to="/dashboard">Dashboard</NavLink>
       <NavLink to="/bmi">BMI & Calories</NavLink>
     </nav>
     {children}
@@ -33,6 +35,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Private><Home /></Private>} />
+          <Route path="/dashboard" element={<Private><Dashboard /></Private>} />
           <Route path="/bmi" element={<Private><Bmi /></Private>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
